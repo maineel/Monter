@@ -13,25 +13,26 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
-    
+
     return { accessToken, refreshToken };
   } catch (error) {
-    throw new APIError(500,"Something went wrong while generating refresh and access tokens");
+    throw new APIError(
+      500,
+      "Something went wrong while generating refresh and access tokens"
+    );
   }
 };
 
-let testAccount = await nodemailer.createTestAccount();
-let transporter = nodemailer.createTransport({
-  host: "smtp.ethereal.email",
-  port: 587,
-  secure: false,
-  auth: {
-    user: testAccount.user,
-    pass: testAccount.pass,
-  },
+const transporter = nodemailer.createTransport({
+    host: 'smtp.ethereal.email',
+    port: 587,
+    auth: {
+        user: 'thelma31@ethereal.email',
+        pass: '6yE3AhsMhTJPnrN7jE'
+    }
 });
 
-// Endpoints
+// User API Endpoints
 const registerUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -39,7 +40,9 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new APIError(400, "All fields are required");
   }
 
-  if (await User.findOne(email)) {
+  const userExists = await User.findOne({ email });
+
+  if (userExists) {
     throw new APIError(409, "User already exists");
   }
 
@@ -52,7 +55,12 @@ const registerUser = asyncHandler(async (req, res) => {
     text: `Your OTP for account verification is ${otp}`,
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Email sent to ${email} with OTP ${otp}`);
+  } catch (error) {
+    console.error(error);
+  }
 
   const user = await User.create({
     email,
@@ -79,21 +87,21 @@ const verifyUser = asyncHandler(async (req, res) => {
   if (!email || !otp) {
     throw new APIError(400, "Email and OTP are required");
   }
-
   const user = await User.findOne({ email });
-
-  if (user.otp === otp) {
-    delete user.otp;
-
+  if (user.otp == otp) {
     user.location = location;
     user.age = age;
     user.workDetails = workDetails;
 
-    await collection.updateOne({ _id: user._id }, { $set: user });
+    await User.updateOne({ _id: user._id }, { 
+        $set: { user },
+        $unset: { otp: 1 } 
+    });
     await user.save({ validateBeforeSave: false });
-  } else {
+  } 
+  else {
     await User.deleteOne({ _id: user._id });
-    throw new APIError(400, "Invalid OTP");
+    throw new APIError(400, "Invalid OTP.  Please register again"); 
   }
 
   return res.status(200).json(new APIResponse(200, {}, "User verified"));
@@ -122,10 +130,10 @@ const loginUser = asyncHandler(async (req, res) => {
   );
 
   const loggedInUser = await User.findById(user._id).select(
-    "-password -refreshToken"
+    "-password -refreshToken -otp -createdAt -updatedAt -__v"
   );
 
-  const options = { httpOnly: true, secure: true }; 
+  const options = { httpOnly: true, secure: true };
 
   return res
     .status(200)
@@ -141,20 +149,17 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const getUserDetails = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user._id).select("-password -refreshToken -otp -createdAt -updatedAt -__v");
+  const user = await User.findById(req.user._id).select(
+    "-password -refreshToken -otp -createdAt -updatedAt -__v"
+  );
 
-    if(!user){
-        throw new APIError(404, "User not found");
-    }
+  if (!user) {
+    throw new APIError(404, "User not found");
+  }
 
-    return res
+  return res
     .status(200)
     .json(new APIResponse(200, user, "User details fetched successfully"));
 });
 
-export {
-  registerUser,
-  loginUser,
-  verifyUser,
-  getUserDetails
-};
+export { registerUser, loginUser, verifyUser, getUserDetails };
