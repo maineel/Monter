@@ -1,8 +1,8 @@
 ### Monter
 
 After downloading and extracting the GitHub Repository run the following commands in your terminal in the project directory:
-npm install
-npm run dev
+- npm install
+- npm run dev
 
 #### API Endpoints:
 
