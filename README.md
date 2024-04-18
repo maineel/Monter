@@ -11,4 +11,4 @@ npm run dev
 ##### Login: http://localhost:8000/api/v1/users/login
 ##### Get User Details: http://localhost:8000/api/v1/users/get-user
 
-#### Link to word doc containing output images: [Monter](https://docs.google.com/document/d/1j2MdNEaB505KuYnyZ3JsZFwU_qFEKPY2foxqtqxpUD8/edit?usp=sharing)
+#### Link to word doc containing output images: [Word Doc](https://docs.google.com/document/d/1j2MdNEaB505KuYnyZ3JsZFwU_qFEKPY2foxqtqxpUD8/edit?usp=sharing)
